@@ -1,0 +1,4 @@
+.venv/
+__pycache__/
+.pytest_cache/
+data/횡단보도_좌표.csv
