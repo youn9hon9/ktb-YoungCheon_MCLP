@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 APP = Path(__file__).resolve().parents[1] / 'app.py'
 SEED = APP.parent / 'data/영천시/영천시_횡단보도_좌표.csv'
+BOUNDARY = APP.parent / 'data/행정동경계/yeongcheon_dong_boundary.geojson'
 
 
 class CollectionAppTest(unittest.TestCase):
@@ -37,12 +38,24 @@ class CollectionAppTest(unittest.TestCase):
         previous = Path.cwd()
         try:
             os.chdir(self.directory.name)
-            app = self.start()
+            exists = Path.exists
+            with patch.object(Path, 'exists', lambda p: False if p == BOUNDARY else exists(p)):
+                app = self.start()
             self.assertEqual(len(app.dataframe[0].value), len(pd.read_csv(SEED)))
             self.assertTrue(any('행정경계 파일이 없어' in x.value for x in app.info))
             self.assertFalse(self.path.exists())
         finally:
             os.chdir(previous)
+
+    def test_bundled_boundary_and_grid(self):
+        app = self.start()
+        self.assertFalse(app.warning)
+        self.assertFalse(any('행정경계 파일이 없어' in x.value for x in app.info))
+        map_object = self.map_mock.call_args.args[0]
+        layers = {getattr(child, 'layer_name', ''): child
+                  for child in map_object._children.values()}
+        self.assertEqual(len(layers['영천시 경계'].data['features']), 16)
+        self.assertGreater(len(layers['탐색 격자 (0.0045도)'].data['features']), 0)
 
     def test_click_save_restart_and_duplicate(self):
         point = {'lat': 35.974912345, 'lng': 128.946112345}
