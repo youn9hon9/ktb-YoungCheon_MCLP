@@ -1,0 +1,60 @@
+{
+  "method": "Gaussian per-category probability densities summed, then city-wide min-max normalization",
+  "reconstruction_not_original": true,
+  "cell_size_m": 25,
+  "crs": "EPSG:5179",
+  "kernel_cutoff_sigma": 5,
+  "mapping": {
+    "노인복지시설": "노인복지시설",
+    "편의점": "편의점",
+    "학교": "학교",
+    "청소년복지시설": "청소년복지시설",
+    "체육시설": "체육시설",
+    "문화공연시설": "문화공연시설",
+    "아동돌봄시설": "아동돌봄시설",
+    "은행": "은행",
+    "학원": "학원",
+    "대형마트": "대형마트",
+    "주차장": "주차장",
+    "의료시설": "의료시설",
+    "음식점": "음식점",
+    "미용실": "미용실",
+    "의료기관": "의료시설",
+    "미용업": "미용실",
+    "문화시설": "문화공연시설",
+    "어린이집,유치원": "아동돌봄시설",
+    "지역아동센터": "아동돌봄시설"
+  },
+  "importance": {
+    "노인복지시설": 0.7643,
+    "편의점": 0.6409,
+    "학교": 0.6246,
+    "청소년복지시설": 0.4888,
+    "체육시설": 0.4789,
+    "문화공연시설": 0.4544,
+    "아동돌봄시설": 0.4061,
+    "은행": 0.3813,
+    "학원": 0.3492,
+    "대형마트": 0.3138,
+    "주차장": 0.2557,
+    "의료시설": 0.1484,
+    "음식점": 0.1211,
+    "미용실": 0.0358
+  },
+  "raw_rows": 2197,
+  "included_unique_points": 1722,
+  "excluded_categories": {
+    "카페": 242,
+    "부동산": 166
+  },
+  "invalid_coordinates": 0,
+  "outside_boundary": 0,
+  "duplicates_removed": 67,
+  "missing_report_categories": [
+    "청소년복지시설"
+  ],
+  "source_sha256": {
+    "data/영천시/영천시_POI_통합.csv": "91811ab140c30c0a34881c0306050250f72d7786cf96bfe0cedcc1e00e2f93ea",
+    "data/bnd_sigungu_37070_2025_2Q.zip": "1b3ebb2cca0690174e797f64291b4273d863ad2930b241017c6306dfe489c263"
+  }
+}
