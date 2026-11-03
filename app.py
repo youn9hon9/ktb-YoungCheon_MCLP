@@ -74,14 +74,14 @@ if 'coords' not in st.session_state:
         st.error(f'좌표 CSV를 읽을 수 없습니다: {exc}')
         st.stop()
 
-st.session_state.setdefault('last_center', [35.9749, 128.9461])
-st.session_state.setdefault('zoom', 16)
 st.session_state.setdefault('new_point', None)
 st.session_state.setdefault('last_click', None)
 
 raw_boundary = BOUNDARY_PATH.read_bytes() if BOUNDARY_PATH.exists() else None
 
-m = folium.Map(location=st.session_state.last_center, zoom_start=st.session_state.zoom)
+# Keep the base script stable: st_folium hashes it into the component identity.
+# Browser pan/zoom stays local; saved markers update through a dynamic layer.
+m = folium.Map(location=[35.9749, 128.9461], zoom_start=16, prefer_canvas=True)
 if raw_boundary is None:
     st.info('행정경계 파일이 없어 기본 지도로 시작합니다. 좌표 수집·저장은 가능하며, 경계 파일을 추가하면 경계와 탐색 격자가 표시됩니다.')
 else:
@@ -94,18 +94,14 @@ else:
     except (ValueError, KeyError, TypeError) as exc:
         st.warning(f'경계를 표시할 수 없어 기본 지도를 사용합니다: {exc}')
 
+markers = folium.FeatureGroup(name='저장된 좌표')
 for lat, lon in st.session_state.coords:
-    folium.CircleMarker(location=[lat, lon], radius=6, color='blue', fill=True).add_to(m)
+    folium.CircleMarker(location=[lat, lon], radius=6, color='blue', fill=True).add_to(markers)
 folium.LayerControl().add_to(m)
 m.add_child(folium.LatLngPopup())
 map_data = st_folium(m, key='crosswalk_map', use_container_width=True, height=700,
-                    returned_objects=['last_clicked', 'center', 'zoom'])
+                    returned_objects=['last_clicked'], feature_group_to_add=markers)
 if map_data:
-    if map_data.get('center'):
-        center = map_data['center']
-        st.session_state.last_center = [center['lat'], center['lng']]
-    if map_data.get('zoom') is not None:
-        st.session_state.zoom = map_data['zoom']
     click = map_data.get('last_clicked')
     if click:
         point = (click['lat'], click['lng'])
