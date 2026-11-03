@@ -49,7 +49,7 @@ def main():
     out = args.output
     out.mkdir(parents=True, exist_ok=True)
     poi_path = ROOT / 'data/영천시/영천시_POI_통합.csv'
-    boundary_path = ROOT / 'data/bnd_sigungu_37070_2025_2Q.zip'
+    boundary_path = ROOT / 'data/행정동경계/bnd_sigungu_37070_2025_2Q.zip'
     boundary = gpd.read_file(boundary_path).to_crs(5179)
     geometry = boundary.geometry.union_all()
     raw = pd.read_csv(poi_path)
@@ -124,7 +124,7 @@ def plot(out, boundary, points, xs, ys, score, step):
     fig.text(.04, .94, '영천시 POI 기반 활동 밀도', fontsize=24, color='#163447')
     fig.text(.04, .893, f'보고서의 유형별 대역폭을 적용한 KDE 재구성 · 공식 행정경계 · {step:g}m 계산 격자',
              fontsize=12, color='#657683')
-    dong = gpd.read_file(ROOT / 'data/bnd_dong_37070_2025_2Q.zip').to_crs(5179)
+    dong = gpd.read_file(ROOT / 'data/행정동경계/bnd_dong_37070_2025_2Q.zip').to_crs(5179)
     cmap = plt.get_cmap('YlOrRd').copy()
     cmap.set_bad('white')
     extent = [xs[0]-step/2, xs[-1]+step/2, ys[0]-step/2, ys[-1]+step/2]

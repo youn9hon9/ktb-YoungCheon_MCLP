@@ -98,7 +98,7 @@ def panel(boundary, bounds, point_count, kde=False):
 
 
 def main():
-    boundary = gpd.read_file(ROOT/'data/bnd_sigungu_37070_2025_2Q.zip').to_crs(5179)
+    boundary = gpd.read_file(ROOT/'data/행정동경계/bnd_sigungu_37070_2025_2Q.zip').to_crs(5179)
     west,south,east,north = boundary.to_crs(4326).total_bounds
     bounds = [[south,west],[north,east]]
     points = pd.read_csv(OUT/'included_poi.csv')

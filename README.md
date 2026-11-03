@@ -14,6 +14,8 @@ python3 -m venv .venv
 
 브라우저에서 `http://localhost:8501`을 엽니다. Codespaces에서는 포트 8501의 미리보기를 사용합니다.
 
+마커를 작게 표시하고 격자 없이 읍면동 경계만 보려면 `streamlit run streamlit_app.py`로 실행합니다.
+
 ## 좌표 수집과 저장
 
 1. 기존 좌표는 파란색 마커로 표시됩니다.
@@ -42,3 +44,17 @@ python3 -m venv .venv
 ```
 
 경계 파일 없이 실행, 실행 디렉터리 변경, 좌표 저장·재접속·중복 방지, 잘못된 CSV 및 저장 실패 처리를 확인합니다. 테스트는 임시 저장 파일을 사용합니다.
+
+## 데이터 폴더
+
+- `data/행정동경계/`: 시·읍면동 경계 원본 ZIP과 앱용 GeoJSON
+- `data/고령인구/격자/`: 영천시 100m 고령인구 격자와 지도 스타일
+- `data/건물높이/`: 도시별 건물 높이 CSV, `격자/`에는 영천시 100m 격자와 지도 스타일
+- `data/그늘막/`: 전국 그늘막 표준데이터와 도시별 추출 CSV
+- `data/poi데이터/`, `data/체감온도/`, `data/횡단보도/`: 유형별 수집 데이터
+- `data/영천시/`: 기존 분석과 앱에서 사용하는 영천시 입력 파일 묶음
+- `data/_etc/`: 기후 통계 보조 자료
+
+사업 보고서는 `docs/`, 블로그용 MCLP 지도와 선정 좌표는 `analysis/mclp/output/`에 있습니다.
+MCLP 그림은 `analysis/mclp/requirements.txt`의 의존성과 Playwright Chromium을 설치한 뒤
+`python analysis/mclp/make_figure.py`로 생성합니다. 중간 HTML은 자동 생성되므로 Git에서 제외합니다.

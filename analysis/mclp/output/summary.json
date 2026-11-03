@@ -1,0 +1,21 @@
+{
+  "new_sites": 36,
+  "existing_records": 42,
+  "existing_unique_coordinates": 38,
+  "candidates": 622,
+  "demand_points": 187,
+  "covered_before": 107,
+  "covered_after": 187,
+  "coverage_radius_m": 200,
+  "minimum_spacing_m": 100,
+  "solver_status": 0,
+  "mip_gap": 0.0,
+  "weights": {
+    "kde": 0.3,
+    "poi_count_150m": 0.3,
+    "wbgt": 0.3,
+    "elderly": 0.1
+  },
+  "missing_elderly_policy": "zero for this illustration",
+  "budget": 36
+}
