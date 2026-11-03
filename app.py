@@ -17,7 +17,7 @@ BOUNDARY_PATH = BASE_DIR / 'data/행정동경계/yeongcheon_dong_boundary.geojso
 
 
 def load_coords(path):
-    frame = pd.read_csv(path)
+    frame = pd.read_csv(path, float_precision='round_trip')
     frame = frame[['위도', '경도']].apply(pd.to_numeric, errors='raise')
     if not (frame['위도'].between(-90, 90) & frame['경도'].between(-180, 180)).all():
         raise ValueError('유효하지 않은 위도·경도가 있습니다.')
@@ -76,6 +76,16 @@ if 'coords' not in st.session_state:
 
 st.session_state.setdefault('new_point', None)
 st.session_state.setdefault('last_click', None)
+st.session_state.setdefault('undo_record', None)
+
+
+def select_point():
+    click = st.session_state.get('crosswalk_map', {}).get('last_clicked')
+    if click:
+        point = (click['lat'], click['lng'])
+        if point != st.session_state.last_click:
+            st.session_state.last_click = point
+            st.session_state.new_point = point
 
 raw_boundary = BOUNDARY_PATH.read_bytes() if BOUNDARY_PATH.exists() else None
 
@@ -97,11 +107,19 @@ else:
 markers = folium.FeatureGroup(name='저장된 좌표')
 for lat, lon in st.session_state.coords:
     folium.CircleMarker(location=[lat, lon], radius=6, color='blue', fill=True).add_to(markers)
+if st.session_state.new_point is not None:
+    folium.CircleMarker(location=st.session_state.new_point, radius=9,
+                        color='#f97316', fill=True, fill_opacity=.9,
+                        tooltip='선택한 위치').add_to(markers)
 folium.LayerControl().add_to(m)
 m.add_child(folium.LatLngPopup())
-map_data = st_folium(m, key='crosswalk_map', use_container_width=True, height=700,
-                    returned_objects=['last_clicked'], feature_group_to_add=markers)
+map_column, action_column = st.columns([3, 1], gap='medium')
+with map_column:
+    map_data = st_folium(m, key='crosswalk_map', use_container_width=True, height=700,
+                        returned_objects=['last_clicked'], feature_group_to_add=markers,
+                        on_change=select_point)
 if map_data:
+    # Also consume the returned value when restoring component state.
     click = map_data.get('last_clicked')
     if click:
         point = (click['lat'], click['lng'])
@@ -109,26 +127,63 @@ if map_data:
             st.session_state.last_click = point
             st.session_state.new_point = point
 
-if st.session_state.new_point is not None:
+with action_column:
+    st.subheader('선택한 좌표')
     point = st.session_state.new_point
-    st.success(f'📍 {point[0]:.6f}, {point[1]:.6f}')
-    if point in st.session_state.coords:
-        st.info('이미 저장된 좌표입니다.')
-    elif st.button('✅ 이 좌표 저장'):
-        # Re-read saved coordinates so another session's additions are retained.
+    duplicate = point is not None and point in st.session_state.coords
+    st.markdown(f"위도 **{point[0]:.6f}**" if point else '위도 —')
+    st.markdown(f"경도 **{point[1]:.6f}**" if point else '경도 —')
+    st.caption('이미 저장된 좌표입니다.' if duplicate else
+               '주황색 위치를 확인한 뒤 저장하세요.' if point else '지도에서 저장할 위치를 클릭하세요.')
+    if st.button('이 좌표 저장', key='save_point', type='primary',
+                 use_container_width=True, disabled=point is None or duplicate):
         try:
             existing = load_coords(SAVE_PATH) if SAVE_PATH.exists() else st.session_state.coords
-            coords = existing if point in existing else existing + [point]
+            added = point not in existing
+            coords = existing + [point] if added else existing
             save_coords(coords)
         except (OSError, ValueError, KeyError) as exc:
             st.error(f'저장하지 못했습니다. 다시 시도해 주세요: {exc}')
         else:
             st.session_state.coords = coords
+            if added:
+                st.session_state.undo_record = (len(existing), point)
             st.session_state.new_point = None
+            st.session_state.notice = '좌표를 저장했습니다.' if added else '이미 저장된 좌표입니다.'
             st.rerun()
 
-st.subheader(f'📋 저장된 좌표 목록 ({len(st.session_state.coords)}개)')
-frame = pd.DataFrame(st.session_state.coords, columns=['위도', '경도'])
-st.dataframe(frame, use_container_width=True)
-st.download_button('📥 CSV 다운로드', frame.to_csv(index=False).encode('utf-8-sig'),
-                   '횡단보도_좌표.csv', 'text/csv')
+    if st.button('마지막 저장 취소', key='undo_point', use_container_width=True,
+                 disabled=st.session_state.undo_record is None):
+        index, saved_point = st.session_state.undo_record
+        try:
+            existing = load_coords(SAVE_PATH)
+            if index >= len(existing) or existing[index] != saved_point:
+                raise ValueError('저장 파일이 변경되어 취소할 좌표를 확인할 수 없습니다.')
+            coords = existing[:index] + existing[index + 1:]
+            save_coords(coords)
+        except (OSError, ValueError, KeyError) as exc:
+            st.error(f'취소하지 못했습니다: {exc}')
+        else:
+            st.session_state.coords = coords
+            st.session_state.undo_record = None
+            st.session_state.new_point = saved_point
+            st.session_state.notice = '마지막 저장을 취소했습니다.'
+            st.rerun()
+    if notice := st.session_state.pop('notice', None):
+        st.toast(notice)
+
+    st.divider()
+    st.subheader('최근 저장 목록')
+    st.caption(f'전체 {len(st.session_state.coords):,}개 · 최근 5개')
+    frame = pd.DataFrame(st.session_state.coords, columns=['위도', '경도'])
+    st.dataframe(frame.tail(5).iloc[::-1], hide_index=True, use_container_width=True,
+                 height=210, column_config={
+                     '위도': st.column_config.NumberColumn(format='%.6f'),
+                     '경도': st.column_config.NumberColumn(format='%.6f'),
+                 })
+    st.download_button('CSV 다운로드', frame.to_csv(index=False).encode('utf-8-sig'),
+                       '횡단보도_좌표.csv', 'text/csv', use_container_width=True)
+    st.caption('저장 취소는 이 세션에서 마지막으로 추가한 좌표에 적용됩니다.')
+
+with st.expander(f'전체 좌표 목록 ({len(frame):,}개)', expanded=False):
+    st.dataframe(frame, use_container_width=True, hide_index=True)
