@@ -9,10 +9,13 @@
 ```bash
 .venv/bin/python -m pip install -r analysis/kde/requirements.txt
 .venv/bin/python analysis/kde/reconstruct.py
+.venv/bin/python -m playwright install chromium
+.venv/bin/python analysis/kde/render_folium.py
 .venv/bin/python -m unittest discover -s analysis/kde -v
 ```
 
 한글 폰트는 로컬의 Malgun Gothic 또는 Noto Sans CJK KR을 사용합니다.
+Folium PNG 출력은 Chromium 실행 라이브러리와 인터넷 연결이 필요합니다. `render_folium.py`는 이미 계산된 격자를 읽으며 KDE를 다시 계산하지 않습니다.
 
 ## 이번 계산에서 정한 가정
 
@@ -42,7 +45,9 @@
 
 ## 산출물
 
-- `output/yeongcheon_kde_wide.png`: 영천시 전체와 도심 확대 지도. 동일한 전역 점수·색상 기준을 사용합니다. 낮은 밀도를 보기 위해 색상만 제곱근 스케일로 표시하며 계산값은 바꾸지 않습니다.
+- `output/yeongcheon_kde_wide.png`: `render_folium.py` 실행 후에는 동일한 전체 영천시 범위·축척의 두 패널을 표시합니다. 왼쪽은 분석에 사용한 주황색 POI, 오른쪽은 시 경계로 자른 붉은 KDE 등고선입니다. 배경은 흑백·미색으로 옅게 처리한 OpenStreetMap이고, 양쪽에 진한 파란 경계와 반투명 연파랑 내부를 표시합니다. 범례·5km 축척·지도 제공자 표시만 남깁니다.
+- 등고선 구간은 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.4, 0.7, 1입니다. 0.002 미만은 붉은 영역을 표시하지 않습니다. 경계 인접 셀의 등고선을 생성할 때만 최대 두 셀의 이웃 평균을 확장하고, 폴리곤을 정확한 경계로 잘라냅니다. 저장된 KDE 수치는 변경하지 않습니다.
+- `output/maps.html`, `poi_map.html`, `kde_map.html`: Folium 미리보기. 재생성 가능하며 Git에는 포함하지 않습니다. `reconstruct.py`만 다시 실행하면 PNG는 최초 Matplotlib 전체·도심 확대 그림으로 덮어쓰므로, 최종 디자인에는 `render_folium.py`를 이어서 실행하세요.
 - `output/kde_grid.npz`: 투영좌표 x/y, 밀도(m⁻²), 정규화 점수, 경계 마스크, CRS, 격자 간격. 경계 밖은 NaN입니다.
 - `output/category_summary.csv`: 유형별 사용 지점 수, 중요도, 대역폭, 경계 내부 밀도 적분.
 - `output/included_poi.csv`: 계산에 실제 사용한 POI.
