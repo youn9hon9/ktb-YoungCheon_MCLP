@@ -79,13 +79,7 @@ st.session_state.setdefault('zoom', 16)
 st.session_state.setdefault('new_point', None)
 st.session_state.setdefault('last_click', None)
 
-uploaded = st.sidebar.file_uploader('행정경계 GeoJSON (선택)', type=['geojson', 'json'])
-st.sidebar.caption('WGS84 경도·위도 좌표의 영천시 경계 파일을 사용하세요.')
-raw_boundary = None
-if uploaded is not None:
-    raw_boundary = uploaded.getvalue()
-elif BOUNDARY_PATH.exists():
-    raw_boundary = BOUNDARY_PATH.read_bytes()
+raw_boundary = BOUNDARY_PATH.read_bytes() if BOUNDARY_PATH.exists() else None
 
 m = folium.Map(location=st.session_state.last_center, zoom_start=st.session_state.zoom)
 if raw_boundary is None:
